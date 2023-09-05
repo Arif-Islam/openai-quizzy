@@ -43,7 +43,42 @@ model User {
   email         String?   @unique
   emailVerified DateTime?
   image         String?
+  games         Game[]
   accounts      Account[]
   sessions      Session[]
+}
+
+enum GameType {
+  mcq
+  open_ended
+}
+
+model Game {
+  id  String  @id @default(cuid())
+  userId  String
+  questions Question[]
+  topic String
+  timeStarted DateTime
+  timeEnded DateTime?
+  gameType  GameType
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId], name: "userId")
+}
+
+model Question {
+  id  String  @id @default(cuid())
+  question  String
+  answer  String
+  gameId  String
+  options Json?
+  isCorrect Boolean?
+  percentageCorrect   Float?
+  questionType  GameType
+  userAnswer  String?
+
+  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+
+  @@index([gameId], name: "gameId")
 }
 
