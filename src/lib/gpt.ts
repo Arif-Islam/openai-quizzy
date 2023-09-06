@@ -66,6 +66,8 @@ export async function strict_output(
       ],
     });
 
+    // console.log(response.choices);
+
     let res: string =
       response.choices[0].message?.content?.replace(/'/g, '"') ?? "";
 
