@@ -24,13 +24,14 @@ import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { CopyCheck, BookOpen } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
 
 type Props = {};
 
-type input = z.infer<typeof quizCreationSchema>;
+type Input = z.infer<typeof quizCreationSchema>;
 
 const QuizCreation = (props: Props) => {
-  const form = useForm<input>({
+  const form = useForm<Input>({
     resolver: zodResolver(quizCreationSchema),
     defaultValues: {
       amount: 3,
@@ -39,7 +40,7 @@ const QuizCreation = (props: Props) => {
     },
   });
 
-  const onSubmit = () => {};
+  const onSubmit = (input: Input) => {};
 
   form.watch();
 
