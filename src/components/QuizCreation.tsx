@@ -25,12 +25,23 @@ import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { CopyCheck, BookOpen } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
+import { useRouter } from "next/navigation";
 
 type Props = {};
 
 type Input = z.infer<typeof quizCreationSchema>;
 
 const QuizCreation = (props: Props) => {
+  const router = useRouter();
+
+  const { mutate: getQuestions, isLoading } = useMutation({
+    mutationFn: async ({ amount, topic, type }: Input) => {
+      const response = await axios.post("/api/game", { amount, topic, type });
+      return response.data;
+    },
+  });
+
   const form = useForm<Input>({
     resolver: zodResolver(quizCreationSchema),
     defaultValues: {
@@ -40,7 +51,39 @@ const QuizCreation = (props: Props) => {
     },
   });
 
-  const onSubmit = (input: Input) => {};
+  // const onSubmit = async (input: Input) => {
+  //   getQuestions(
+  //     { amount: input.amount, topic: input.topic, type: input.type },
+  //     {
+  //       onSuccess: ({ gameId }) => {
+  //         if (form.getValues("type") == "open-ended") {
+  //           router.push(`/play/open-ended/${gameId}`);
+  //         } else {
+  //           router.push(`/play/mcq/${gameId}`);
+  //         }
+  //       },
+  //     }
+  //   );
+  // };
+
+  async function onSubmit(input: Input) {
+    getQuestions(
+      {
+        amount: input.amount,
+        topic: input.topic,
+        type: input.type,
+      },
+      {
+        onSuccess: ({ gameId }) => {
+          if (form.getValues("type") == "open_ended") {
+            router.push(`/play/open-ended/${gameId}`);
+          } else {
+            router.push(`/play/mcq/${gameId}`);
+          }
+        },
+      }
+    );
+  }
 
   form.watch();
 
@@ -110,18 +153,20 @@ const QuizCreation = (props: Props) => {
                 <Separator orientation="vertical" />
                 <Button
                   variant={
-                    form.getValues("type") === "open-ended"
+                    form.getValues("type") === "open_ended"
                       ? "default"
                       : "secondary"
                   }
                   className="w-1/2 rounded-none rounded-r-lg"
-                  onClick={() => form.setValue("type", "open-ended")}
+                  onClick={() => form.setValue("type", "open_ended")}
                   type="button"
                 >
                   <BookOpen className="w-4 h-4 mr-2" /> Open Ended
                 </Button>
               </div>
-              <Button type="submit">Submit</Button>
+              <Button disabled={isLoading} type="submit">
+                Submit
+              </Button>
             </form>
           </Form>
         </CardContent>

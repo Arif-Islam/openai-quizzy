@@ -54,31 +54,31 @@ enum GameType {
 }
 
 model Game {
-  id  String  @id @default(cuid())
-  userId  String
-  questions Question[]
-  topic String
+  id          String     @id @default(cuid())
+  userId      String
   timeStarted DateTime
-  timeEnded DateTime?
-  gameType  GameType
-  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic       String
+  timeEnded   DateTime?
+  gameType    GameType
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  questions   Question[]
 
-  @@index([userId], name: "userId")
+  @@index([userId])
 }
 
 model Question {
-  id  String  @id @default(cuid())
-  question  String
-  answer  String
-  gameId  String
-  options Json?
-  isCorrect Boolean?
-  percentageCorrect   Float?
-  questionType  GameType
-  userAnswer  String?
+  id                String   @id @default(cuid())
+  question          String
+  answer            String
+  gameId            String
+  options           Json? 
+  percentageCorrect Float? 
+  isCorrect         Boolean? 
+  questionType      GameType
+  userAnswer        String?
 
-  game Game @relation(fields: [gameId], references: [id], onDelete: Cascade)
+  game Game @relation(fields: [gameId], references: [id])
 
-  @@index([gameId], name: "gameId")
+  @@index([gameId])
 }
 

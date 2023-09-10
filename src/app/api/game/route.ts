@@ -16,9 +16,10 @@ export const POST = async (req: Request, res: Response) => {
         }
       );
     }
-
     const body = await req.json();
     const { topic, amount, type } = quizCreationSchema.parse(body);
+
+    // console.log("ALL OK HERE");
 
     const game = await prisma.game.create({
       data: {
@@ -29,11 +30,15 @@ export const POST = async (req: Request, res: Response) => {
       },
     });
 
+    // console.log("created game", game);
+
     const { data } = await axios.post(`${process.env.API_URL}/api/questions`, {
       amount,
       topic,
       type,
     });
+
+    // console.log("questions data", data);
 
     if (type === "mcq") {
       type mcqQuestion = {
@@ -65,7 +70,7 @@ export const POST = async (req: Request, res: Response) => {
       await prisma.question.createMany({
         data: manyData,
       });
-    } else if (type === "open-ended") {
+    } else if (type === "open_ended") {
       type openQuestion = {
         question: string;
         answer: string;
@@ -100,7 +105,7 @@ export const POST = async (req: Request, res: Response) => {
 
     return NextResponse.json(
       {
-        error: "Something went wrong!",
+        error,
       },
       { status: 500 }
     );
