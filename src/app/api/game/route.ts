@@ -81,7 +81,7 @@ export const POST = async (req: Request, res: Response) => {
           question: question.question,
           answer: question.answer,
           gameId: game.id,
-          questionType: "open-ended",
+          questionType: "open_ended",
         };
       });
 

@@ -21,20 +21,20 @@ const MCQPage = async ({ params: { gameId } }: Props) => {
       id: gameId,
     },
     include: {
-        questions: {
-            select: {
-                id: true,
-                question: true,
-                options: true
-            }
-        }
-    }
+      questions: {
+        select: {
+          id: true,
+          question: true,
+          options: true,
+        },
+      },
+    },
   });
 
-  if(!game || game.gameType !== 'mcq'){
-    return redirect('/quiz')
+  if (!game || game.gameType !== "mcq") {
+    return redirect("/quiz");
   }
-  return <MCQ game={game} />
+  return <MCQ game={game} />;
 };
 
 export default MCQPage;

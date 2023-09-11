@@ -2,29 +2,27 @@
 import { Game, Question } from "@prisma/client";
 import { BarChart, ChevronRight, Loader2, Timer } from "lucide-react";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button, buttonVariants } from "./ui/button";
-import MCQCounter from "./MCQCounter";
-import { useMutation } from "@tanstack/react-query";
-import { checkAnswerSchema } from "@/schemas/form/quiz";
-import { z } from "zod";
-import axios from "axios";
-import { toast } from "./ui/use-toast";
-import Link from "next/link";
+import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { cn, formatTimeDelta } from "@/lib/utils";
 import { differenceInSeconds } from "date-fns";
+import { useMutation } from "@tanstack/react-query";
+import { z } from "zod";
+import { checkAnswerSchema } from "@/schemas/form/quiz";
+import axios from "axios";
+import { toast } from "./ui/use-toast";
+import BlankAnswerInput from "./BlankAnswerInput";
+import Link from "next/link";
 
 type Props = {
-  game: Game & { questions: Pick<Question, "id" | "question" | "options">[] };
+  game: Game & { questions: Pick<Question, "id" | "question" | "answer">[] };
 };
 
-const MCQ = ({ game }: Props) => {
+const OpenEnded = ({ game }: Props) => {
   const [questionIndex, setQuestionIndex] = useState(0);
-  const [selectedChoice, setSelectedChoice] = useState<number>(0);
-  const [correctAnswers, setCorrectAnswers] = useState<number>(0);
-  const [wrongAnswers, setWrongAnswers] = useState<number>(0);
   const [hasEnded, setHasEnded] = useState<boolean>(false);
   const [now, setNow] = useState<Date>(new Date());
+  const [blankAnswer, setBlankAnswer] = useState<string>("");
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -41,18 +39,16 @@ const MCQ = ({ game }: Props) => {
     return game.questions[questionIndex];
   }, [game.questions, questionIndex]);
 
-  const options = useMemo(() => {
-    if (!currentQuestion) return [];
-    if (!currentQuestion.options) return [];
-
-    return JSON.parse(currentQuestion.options as string) as string[];
-  }, [currentQuestion]);
-
   const { mutate: checkAnswer, isLoading: isChecking } = useMutation({
     mutationFn: async () => {
+      let filledAnswer = blankAnswer;
+      document.querySelectorAll("user-blank-input").forEach((input) => {
+        filledAnswer = filledAnswer.replace("_____", input.value);
+        input.value = " ";
+      });
       const payload: z.infer<typeof checkAnswerSchema> = {
         questionId: currentQuestion.id,
-        userAnswer: options[selectedChoice],
+        userAnswer: filledAnswer,
       };
       const response = await axios.post("/api/checkAnswer", payload);
       return response.data;
@@ -61,24 +57,13 @@ const MCQ = ({ game }: Props) => {
 
   const handleNext = useCallback(() => {
     if (isChecking) return;
-
     checkAnswer(undefined, {
-      onSuccess: ({ isCorrect }) => {
-        if (isCorrect) {
-          toast({
-            title: "Correct!",
-            description: "Correct answer",
-            variant: "success",
-          });
-          setCorrectAnswers((prev) => prev + 1);
-        } else {
-          toast({
-            title: "Incorrect!",
-            description: "Incorrect answer",
-            variant: "destructive",
-          });
-          setWrongAnswers((prev) => prev + 1);
-        }
+      onSuccess: ({ percentageSimilar }) => {
+        toast({
+          title: `Your answer is ${percentageSimilar}% similar to the correct answer.`,
+          description:
+            "Answers are calculated based on the similarity comparison",
+        });
         if (questionIndex === game.questions.length - 1) {
           setHasEnded(true);
           return;
@@ -92,15 +77,7 @@ const MCQ = ({ game }: Props) => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = event.key;
 
-      if (key === "1") {
-        setSelectedChoice(0);
-      } else if (key === "2") {
-        setSelectedChoice(1);
-      } else if (key === "3") {
-        setSelectedChoice(2);
-      } else if (key === "4") {
-        setSelectedChoice(3);
-      } else if (key === "Enter") {
+      if (key === "Enter") {
         handleNext();
       }
     };
@@ -145,10 +122,10 @@ const MCQ = ({ game }: Props) => {
             {formatTimeDelta(differenceInSeconds(now, game.timeStarted))}
           </div>
         </div>
-        <MCQCounter
+        {/* <MCQCounter
           correntAnswers={correctAnswers}
           wrongAnswers={wrongAnswers}
-        />
+        /> */}
       </div>
       <Card className="w-full mt-4">
         <CardHeader className="flex flex-row items-center">
@@ -164,23 +141,10 @@ const MCQ = ({ game }: Props) => {
         </CardHeader>
       </Card>
       <div className="flex flex-col items-center justify-center w-full mt-4">
-        {options.map((option, index) => {
-          return (
-            <Button
-              key={option}
-              variant={selectedChoice === index ? "default" : "outline"}
-              className="justify-start w-full py-8 mb-4"
-              onClick={() => setSelectedChoice(index)}
-            >
-              <div className="flex items-center justify-start">
-                <div className="p-2 px-3 mr-5 border rounded-md">
-                  {index + 1}
-                </div>
-                <div className="text-start">{option}</div>
-              </div>
-            </Button>
-          );
-        })}
+        <BlankAnswerInput
+          answer={currentQuestion.answer}
+          setBlankAnswer={setBlankAnswer}
+        />
         <Button
           variant="default"
           className="mt-2"
@@ -198,4 +162,4 @@ const MCQ = ({ game }: Props) => {
   );
 };
 
-export default MCQ;
+export default OpenEnded;
