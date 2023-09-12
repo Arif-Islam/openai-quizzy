@@ -12,7 +12,7 @@ import {
 import Link from "next/link";
 import { signOut } from "next-auth/react";
 import { Button } from "./ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, LucideLayoutDashboard } from "lucide-react";
 import UserAvatar from "./UserAvatar";
 
 type Props = {
@@ -39,7 +39,9 @@ const UserAccountNav = ({ user }: Props) => {
 
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/">Meow</Link>
+          <Link href="/dashboard" className="cursor-pointer font-medium">
+            Dashboard <LucideLayoutDashboard className="w-4 h-4 ml-2" />
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem

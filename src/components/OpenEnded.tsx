@@ -42,9 +42,9 @@ const OpenEnded = ({ game }: Props) => {
   const { mutate: checkAnswer, isLoading: isChecking } = useMutation({
     mutationFn: async () => {
       let filledAnswer = blankAnswer;
-      document.querySelectorAll("user-blank-input").forEach((input) => {
+      document.querySelectorAll("#user-blank-input").forEach((input) => {
         filledAnswer = filledAnswer.replace("_____", input.value);
-        input.value = " ";
+        input.value = "";
       });
       const payload: z.infer<typeof checkAnswerSchema> = {
         questionId: currentQuestion.id,
@@ -122,10 +122,6 @@ const OpenEnded = ({ game }: Props) => {
             {formatTimeDelta(differenceInSeconds(now, game.timeStarted))}
           </div>
         </div>
-        {/* <MCQCounter
-          correntAnswers={correctAnswers}
-          wrongAnswers={wrongAnswers}
-        /> */}
       </div>
       <Card className="w-full mt-4">
         <CardHeader className="flex flex-row items-center">

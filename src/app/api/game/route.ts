@@ -19,8 +19,6 @@ export const POST = async (req: Request, res: Response) => {
     const body = await req.json();
     const { topic, amount, type } = quizCreationSchema.parse(body);
 
-    // console.log("ALL OK HERE");
-
     const game = await prisma.game.create({
       data: {
         gameType: type,
@@ -30,15 +28,26 @@ export const POST = async (req: Request, res: Response) => {
       },
     });
 
-    // console.log("created game", game);
+    await prisma.topicCount.upsert({
+      where: {
+        topic,
+      },
+      create: {
+        topic,
+        count: 1,
+      },
+      update: {
+        count: {
+          increment: 1,
+        },
+      },
+    });
 
     const { data } = await axios.post(`${process.env.API_URL}/api/questions`, {
       amount,
       topic,
       type,
     });
-
-    // console.log("questions data", data);
 
     if (type === "mcq") {
       type mcqQuestion = {

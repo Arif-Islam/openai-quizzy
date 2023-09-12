@@ -8,7 +8,7 @@ export const quizCreationSchema = z.object({
       message: "Topic must be at most 20 characters long",
     }),
   type: z.enum(["mcq", "open_ended"]),
-  amount: z.number().min(1).max(10),
+  amount: z.number().min(1).max(5),
 });
 
 export const checkAnswerSchema = z.object({
