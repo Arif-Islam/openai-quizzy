@@ -50,7 +50,6 @@ const HistoryComponent = async ({ limit, userId }: Props) => {
       })}
     </div>
   );
-
 };
 
 export default HistoryComponent;

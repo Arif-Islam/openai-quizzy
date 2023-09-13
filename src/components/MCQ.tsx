@@ -6,7 +6,7 @@ import { Card, CardDescription, CardHeader, CardTitle } from "./ui/card";
 import { Button, buttonVariants } from "./ui/button";
 import MCQCounter from "./MCQCounter";
 import { useMutation } from "@tanstack/react-query";
-import { checkAnswerSchema } from "@/schemas/form/quiz";
+import { checkAnswerSchema, endGameSchema } from "@/schemas/form/quiz";
 import { z } from "zod";
 import axios from "axios";
 import { toast } from "./ui/use-toast";
@@ -59,6 +59,16 @@ const MCQ = ({ game }: Props) => {
     },
   });
 
+  const { mutate: endGame } = useMutation({
+    mutationFn: async () => {
+      const payload: z.infer<typeof endGameSchema> = {
+        gameId: game.id,
+      };
+      const response = await axios.post(`/api/endGame`, payload);
+      return response.data;
+    },
+  });
+
   const handleNext = useCallback(() => {
     if (isChecking) return;
 
@@ -80,13 +90,21 @@ const MCQ = ({ game }: Props) => {
           setWrongAnswers((prev) => prev + 1);
         }
         if (questionIndex === game.questions.length - 1) {
+          endGame();
           setHasEnded(true);
           return;
         }
         setQuestionIndex((prev) => prev + 1);
       },
+      onError: (error) => {
+        console.error(error);
+        toast({
+          title: "Something went wrong",
+          variant: "destructive",
+        });
+      },
     });
-  }, [checkAnswer, isChecking, game.questions.length, questionIndex]);
+  }, [checkAnswer, isChecking, game.questions.length, questionIndex, endGame]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {

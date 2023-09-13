@@ -23,7 +23,7 @@ const WordCloud = ({ formattedTopic }: Props) => {
         // fontStyle="italic"
         // fontWeight="bold"
         fontSize={fontSizeMapper}
-        // spiral="rectangular"
+        spiral="rectangular"
         rotate={0}
         padding={10}
         fill={theme.theme == "dark" ? "white" : "black"}

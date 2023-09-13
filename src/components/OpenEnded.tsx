@@ -8,11 +8,12 @@ import { cn, formatTimeDelta } from "@/lib/utils";
 import { differenceInSeconds } from "date-fns";
 import { useMutation } from "@tanstack/react-query";
 import { z } from "zod";
-import { checkAnswerSchema } from "@/schemas/form/quiz";
+import { checkAnswerSchema, endGameSchema } from "@/schemas/form/quiz";
 import axios from "axios";
 import { toast } from "./ui/use-toast";
 import BlankAnswerInput from "./BlankAnswerInput";
 import Link from "next/link";
+import OpenEndedPercentage from "./OpenEndedPercentage";
 
 type Props = {
   game: Game & { questions: Pick<Question, "id" | "question" | "answer">[] };
@@ -23,6 +24,7 @@ const OpenEnded = ({ game }: Props) => {
   const [hasEnded, setHasEnded] = useState<boolean>(false);
   const [now, setNow] = useState<Date>(new Date());
   const [blankAnswer, setBlankAnswer] = useState<string>("");
+  const [averagePercentage, setAveragePercentage] = useState<number>(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -38,6 +40,16 @@ const OpenEnded = ({ game }: Props) => {
   const currentQuestion = useMemo(() => {
     return game.questions[questionIndex];
   }, [game.questions, questionIndex]);
+
+  const { mutate: endGame } = useMutation({
+    mutationFn: async () => {
+      const payload: z.infer<typeof endGameSchema> = {
+        gameId: game.id,
+      };
+      const response = await axios.post(`/api/endGame`, payload);
+      return response.data;
+    },
+  });
 
   const { mutate: checkAnswer, isLoading: isChecking } = useMutation({
     mutationFn: async () => {
@@ -64,14 +76,26 @@ const OpenEnded = ({ game }: Props) => {
           description:
             "Answers are calculated based on the similarity comparison",
         });
+        setAveragePercentage((prev) => {
+          return (prev + percentageSimilar) / (questionIndex + 1);
+        });
         if (questionIndex === game.questions.length - 1) {
+          endGame();
           setHasEnded(true);
           return;
         }
+
         setQuestionIndex((prev) => prev + 1);
       },
+      onError: (error) => {
+        console.error(error);
+        toast({
+          title: "Something went wrong",
+          variant: "destructive",
+        });
+      },
     });
-  }, [checkAnswer, isChecking, game.questions.length, questionIndex]);
+  }, [checkAnswer, isChecking, game.questions.length, questionIndex, endGame]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -122,6 +146,8 @@ const OpenEnded = ({ game }: Props) => {
             {formatTimeDelta(differenceInSeconds(now, game.timeStarted))}
           </div>
         </div>
+
+        <OpenEndedPercentage percentage={averagePercentage} />
       </div>
       <Card className="w-full mt-4">
         <CardHeader className="flex flex-row items-center">

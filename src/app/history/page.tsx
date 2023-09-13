@@ -26,7 +26,7 @@ const HistoryPage = async (props: Props) => {
             </Link>
           </div>
         </CardHeader>
-        <CardContent className="max-h-[60vh] overflow-scroll">
+        <CardContent className="max-h-[60vh] overflow-scroll no-scrollbar">
           <HistoryComponent limit={100} userId={session.user.id} />
         </CardContent>
       </Card>

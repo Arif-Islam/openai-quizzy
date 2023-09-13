@@ -34,9 +34,9 @@ const LoadingQuestions = ({ finished }: Props) => {
         if (prev === 100) {
           return 0;
         }
-        if (Math.random() < 0.1) {
-          return prev + 2;
-        }
+        // if (Math.random() < 0.1) {
+        //   return prev + 2;
+        // }
         return prev + 0.5;
       });
     }, 100);
