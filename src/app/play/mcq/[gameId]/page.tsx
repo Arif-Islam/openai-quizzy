@@ -1,4 +1,5 @@
 import MCQ from "@/components/MCQ";
+import { toast } from "@/components/ui/use-toast";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/nextAuth";
 import { redirect } from "next/navigation";
@@ -31,7 +32,14 @@ const MCQPage = async ({ params: { gameId } }: Props) => {
     },
   });
 
-  if (!game || game.gameType !== "mcq") {
+  if (!game) {
+    toast({
+      title: "Failed to generate questions. Please try again after a minute.",
+      description: "OpenAI API failed to generate any question for you.",
+      variant: "destructive",
+    });
+    return redirect("/quiz");
+  } else if (game.gameType !== "mcq") {
     return redirect("/quiz");
   }
   return <MCQ game={game} />;

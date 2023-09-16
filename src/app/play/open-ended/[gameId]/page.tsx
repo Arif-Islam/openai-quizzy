@@ -1,4 +1,5 @@
 import OpenEnded from "@/components/OpenEnded";
+import { toast } from "@/components/ui/use-toast";
 import { prisma } from "@/lib/db";
 import { getAuthSession } from "@/lib/nextAuth";
 import { redirect } from "next/navigation";
@@ -31,11 +32,18 @@ const OpenEndedPage = async ({ params: { gameId } }: Props) => {
     },
   });
 
-  if (!game || game.gameType !== "open_ended") {
+  if (!game) {
+    toast({
+      title: "Failed to generate questions. Please try again after a minute.",
+      description: "OpenAI API failed to generate any question for you.",
+      variant: "destructive",
+    });
+    return redirect("/quiz");
+  } else if (game.gameType !== "open_ended") {
     return redirect("/quiz");
   }
 
-  return <OpenEnded game={game} />
+  return <OpenEnded game={game} />;
 };
 
 export default OpenEndedPage;

@@ -26,8 +26,9 @@ import { Separator } from "./ui/separator";
 import { CopyCheck, BookOpen } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import LoadingQuestions from "./LoadingQuestions";
+import { toast } from "./ui/use-toast";
 
 type Props = {
   topicParam: string;
@@ -65,17 +66,34 @@ const QuizCreation = ({ topicParam }: Props) => {
         type: input.type,
       },
       {
-        onSuccess: ({ gameId }) => {
+        onSuccess: ({ gameId, size }) => {
           setFinished(true);
-          setTimeout(() => {
-            if (form.getValues("type") == "open_ended") {
-              router.push(`/play/open-ended/${gameId}`);
-            } else {
-              router.push(`/play/mcq/${gameId}`);
-            }
-          }, 1000);
+          if (!size) {
+            toast({
+              title:
+                "Failed to generate questions. Please try again after a minute.",
+              description:
+                "OpenAI API failed to generate any question for you.",
+              variant: "destructive",
+            });
+            return redirect("/quiz");
+          } else if (size > 0) {
+            setTimeout(() => {
+              if (form.getValues("type") == "open_ended") {
+                router.push(`/play/open-ended/${gameId}`);
+              } else {
+                router.push(`/play/mcq/${gameId}`);
+              }
+            }, 1000);
+          } 
         },
         onError: () => {
+          toast({
+            title:
+              "Failed to generate questions. Please try again after a minute.",
+            description: "OpenAI API failed to generate any question for you.",
+            variant: "destructive",
+          });
           setShowLoader(false);
         },
       }

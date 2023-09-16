@@ -9,7 +9,7 @@ type Props = {
 };
 
 const HistoryComponent = async ({ limit, userId }: Props) => {
-  const games = await prisma.game.findMany({
+  let games = await prisma.game.findMany({
     where: {
       userId,
     },
@@ -18,6 +18,7 @@ const HistoryComponent = async ({ limit, userId }: Props) => {
       timeStarted: "desc",
     },
   });
+
   return (
     <div className="space-y-8">
       {games.map((game) => {

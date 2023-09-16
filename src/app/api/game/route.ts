@@ -19,15 +19,6 @@ export const POST = async (req: Request, res: Response) => {
     const body = await req.json();
     const { topic, amount, type } = quizCreationSchema.parse(body);
 
-    const game = await prisma.game.create({
-      data: {
-        gameType: type,
-        timeStarted: new Date(),
-        userId: session.user.id,
-        topic,
-      },
-    });
-
     await prisma.topicCount.upsert({
       where: {
         topic,
@@ -49,57 +40,78 @@ export const POST = async (req: Request, res: Response) => {
       type,
     });
 
-    if (type === "mcq") {
-      type mcqQuestion = {
-        question: string;
-        answer: string;
-        option1: string;
-        option2: string;
-        option3: string;
-      };
+    if (data?.questions?.length > 0) {
+      const game = await prisma.game.create({
+        data: {
+          gameType: type,
+          timeStarted: new Date(),
+          userId: session.user.id,
+          topic,
+        },
+      });
 
-      let manyData = data.questions.map((question: mcqQuestion) => {
-        let options = [
-          question.answer,
-          question.option1,
-          question.option2,
-          question.option3,
-        ];
-        options = options.sort(() => Math.random() - 0.5);
-
-        return {
-          question: question.question,
-          answer: question.answer,
-          options: JSON.stringify(options),
-          gameId: game.id,
-          questionType: "mcq",
+      if (type === "mcq") {
+        type mcqQuestion = {
+          question: string;
+          answer: string;
+          option1: string;
+          option2: string;
+          option3: string;
         };
-      });
 
-      await prisma.question.createMany({
-        data: manyData,
-      });
-    } else if (type === "open_ended") {
-      type openQuestion = {
-        question: string;
-        answer: string;
-      };
+        let manyData = data.questions.map((question: mcqQuestion) => {
+          let options = [
+            question.answer,
+            question.option1,
+            question.option2,
+            question.option3,
+          ];
+          options = options.sort(() => Math.random() - 0.5);
 
-      let manyData = data.questions.map((question: openQuestion) => {
-        return {
-          question: question.question,
-          answer: question.answer,
-          gameId: game.id,
-          questionType: "open_ended",
+          return {
+            question: question.question,
+            answer: question.answer,
+            options: JSON.stringify(options),
+            gameId: game.id,
+            questionType: "mcq",
+          };
+        });
+
+        await prisma.question.createMany({
+          data: manyData,
+        });
+      } else if (type === "open_ended") {
+        type openQuestion = {
+          question: string;
+          answer: string;
         };
-      });
 
-      await prisma.question.createMany({
-        data: manyData,
-      });
+        let manyData = data.questions.map((question: openQuestion) => {
+          return {
+            question: question.question,
+            answer: question.answer,
+            gameId: game.id,
+            questionType: "open_ended",
+          };
+        });
+
+        await prisma.question.createMany({
+          data: manyData,
+        });
+      }
+
+      return NextResponse.json(
+        { gameId: game.id, size: data?.questions?.length },
+        { status: 200 }
+      );
+    } else {
+      return NextResponse.json(
+        {
+          error: "Failed to generate questions!",
+        },
+        { status: 500 }
+      );
     }
-
-    return NextResponse.json({ gameId: game.id }, { status: 200 });
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json(

@@ -8,7 +8,6 @@ import { ZodError } from "zod";
 
 export const POST = async (req: Request, res: Response) => {
   try {
-
     const body = await req.json();
     const { amount, topic, type } = quizCreationSchema.parse(body);
     let questions: any;
@@ -41,14 +40,23 @@ export const POST = async (req: Request, res: Response) => {
       );
     }
 
-    return NextResponse.json(
-      {
-        questions: questions,
-      },
-      {
-        status: 200,
-      }
-    );
+    questions = questions.slice(0, amount);
+
+    if (questions?.length) {
+      return NextResponse.json(
+        {
+          questions: questions,
+        },
+        {
+          status: 200,
+        }
+      );
+    } else {
+      return NextResponse.json(
+        { error: "Failed to generate questions!" },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     if (error instanceof ZodError) {
       return NextResponse.json(
@@ -60,7 +68,10 @@ export const POST = async (req: Request, res: Response) => {
         }
       );
     } else {
-      return NextResponse.json(error);
+      return NextResponse.json(
+        { error: "Failed to generate questions!" },
+        { status: 500 }
+      );
     }
   }
 };
